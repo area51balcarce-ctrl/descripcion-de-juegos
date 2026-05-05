@@ -1,0 +1,16 @@
+{
+  "name": "area51-orden-servicio",
+  "version": "1.0.0",
+  "description": "Formulario AREA 51 con firma, PDF, email y generador de descripciones",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "resend": "latest",
+    "googleapis": "^118.0.0",
+    "nodemailer": "^6.9.0",
+    "openai": "latest"
+  }
+}

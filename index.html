@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AREA 51 - Generador de descripciones</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #40005f, #05010a 60%, #020006);
+      color: #111;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: 100%;
+      max-width: 760px;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 0 25px rgba(0, 230, 118, 0.35);
+      padding: 22px;
+      box-sizing: border-box;
+    }
+    .header { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .header img { width:48px; height:48px; border-radius:50%; object-fit:cover; }
+    h1 { font-size:20px; margin:0; }
+    small { color:#666; }
+    label { display:block; margin-top:14px; font-weight:bold; }
+    input, textarea {
+      width:100%; box-sizing:border-box; margin-top:6px; padding:11px;
+      border-radius:10px; border:1px solid #bbb; font-family:inherit; font-size:14px;
+    }
+    textarea { min-height:190px; resize:vertical; white-space:pre-wrap; }
+    .btn {
+      border:0; cursor:pointer; border-radius:999px; padding:11px 16px;
+      font-weight:bold; background:linear-gradient(90deg,#00e676,#25d366);
+      color:#fff; box-shadow:0 0 10px rgba(0,230,118,.55);
+    }
+    .row { display:flex; gap:8px; align-items:flex-end; }
+    .row input { flex:1; }
+    .copy-row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .copy-btn { padding:7px 11px; font-size:13px; }
+    .status { margin-top:10px; font-size:13px; color:#555; }
+    .error { color:#c62828; }
+    .ok { color:#0a8f3c; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <img src="https://i.imgur.com/qW3bMA7.jpeg" alt="AREA 51" />
+      <div>
+        <h1>AREA 51 - Generador de descripciones</h1>
+        <small>Probador aislado: no toca tu web actual.</small>
+      </div>
+    </div>
+
+    <label>Título del juego</label>
+    <div class="row">
+      <input id="titulo" type="text" placeholder="Ej: Mortal Kombat XL" />
+      <button class="btn" id="btnGenerar">Generar</button>
+    </div>
+    <div id="estado" class="status"></div>
+
+    <div class="copy-row">
+      <label>Descripción</label>
+      <button class="btn copy-btn" onclick="copiar('descripcion')">📋 Copiar descripción</button>
+    </div>
+    <textarea id="descripcion" readonly></textarea>
+
+    <div class="copy-row">
+      <label>Trailer</label>
+      <button class="btn copy-btn" onclick="copiar('trailer')">📋 Copiar trailer</button>
+    </div>
+    <textarea id="trailer" readonly style="min-height:60px;"></textarea>
+  </div>
+
+<script>
+const tituloInput = document.getElementById("titulo");
+const descripcionInput = document.getElementById("descripcion");
+const trailerInput = document.getElementById("trailer");
+const estado = document.getElementById("estado");
+const btn = document.getElementById("btnGenerar");
+
+async function copiar(id) {
+  const campo = document.getElementById(id);
+  const texto = campo.value.trim();
+  if (!texto) return alert("No hay contenido para copiar.");
+
+  try {
+    await navigator.clipboard.writeText(texto);
+    alert("Copiado ✅");
+  } catch (e) {
+    campo.select();
+    document.execCommand("copy");
+    alert("Copiado ✅");
+  }
+}
+
+async function generar() {
+  const titulo = tituloInput.value.trim();
+  if (!titulo) return alert("Ingresá un título.");
+
+  estado.textContent = "Generando y buscando trailer verificado...";
+  estado.className = "status";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("/api/generarJuego", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ titulo })
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Error generando ficha");
+
+    descripcionInput.value = data.descripcion || "";
+    trailerInput.value = data.trailer || "";
+    estado.textContent = "Listo para copiar.";
+    estado.className = "status ok";
+  } catch (err) {
+    estado.textContent = "Error: " + err.message;
+    estado.className = "status error";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+btn.addEventListener("click", generar);
+tituloInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") generar();
+});
+</script>
+</body>
+</html>
